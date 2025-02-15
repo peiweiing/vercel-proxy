@@ -1,13 +1,5 @@
-import axios from 'axios';
-
-export default async function handler(req, res) {
-    const { province, city, county } = req.query;
-    const apiUrl = `https://wis.qq.com/weather/common?source=pc&weather_type=observe|forecast_1h|forecast_24h|index|alarm|limit|tips|rise&province=${province}&city=${city}&county=${county}`;
-
-    try {
-        const response = await axios.get(apiUrl);
-        res.status(200).json(response.data);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch weather data' });
-    }
-}
+// 云函数代码（以 Node.js 为例）
+exports.main = async (event) => {
+  const url = 'https://wis.qq.com/weather/common?' + event.queryString;
+  return fetch(url).then(res => res.json());
+};
