@@ -1,5 +1,7 @@
-// 云函数代码（以 Node.js 为例）
+
 exports.main = async (event) => {
+  // 云函数代码（以 Node.js 为例）
+  console.log(yun函数);
   const url = 'https://wis.qq.com/weather/common?' + event.queryString;
   return fetch(url).then(res => res.json());
 };
