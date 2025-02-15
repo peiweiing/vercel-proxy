@@ -1,0 +1,19 @@
+// api/proxy.js
+module.exports = async (req, res) => {
+  // 允许所有域名跨域（仅测试用）
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  // 提取目标 API 地址
+  const targetUrl = req.query.url; 
+  
+  try {
+    // 转发请求到腾讯天气 API
+    const response = await fetch(targetUrl);
+    const data = await response.json();
+    
+    // 返回处理后的数据
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Proxy error' });
+  }
+};
