@@ -1,19 +1,48 @@
 // api/proxy.js
-module.exports = async (req, res) => {
-  // 允许所有域名跨域（仅测试用）
-  res.setHeader('Access-Control-Allow-Origin', '*');
+import fetch from 'node-fetch';
 
-  // 提取目标 API 地址
-  const targetUrl = req.query.url; 
-  
-  try {
-    // 转发请求到腾讯天气 API
-    const response = await fetch(targetUrl);
-    const data = await response.json();
-    
-    // 返回处理后的数据
-    res.status(200).json(data);
-  } catch (error) {
-    res.status(500).json({ error: 'Proxy error' });
-  }
-};
+export default async function handler(req, res) {
+    try {
+        // 设置 CORS 头
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        // 处理预检请求
+        if (req.method === 'OPTIONS') {
+            res.status(200).end();
+            return;
+        }
+
+        // 获取目标 URL
+        const targetUrl = req.query.url;
+
+        if (!targetUrl) {
+            return res.status(400).json({ error: 'Missing target URL' });
+        }
+
+        // 发起代理请求
+        const response = await fetch(targetUrl, {
+            method: req.method,
+            headers: {
+                ...req.headers,
+                'Origin': undefined // 移除 Origin 头，避免服务器进行 CORS 检查
+            },
+            body: req.method !== 'GET' ? req.body : undefined
+        });
+
+        // 将响应头和状态码传递给客户端
+        const headers = Object.fromEntries(response.headers.entries());
+        res.status(response.status);
+        for (const [key, value] of Object.entries(headers)) {
+            res.setHeader(key, value);
+        }
+
+        // 将响应体传递给客户端
+        const data = await response.buffer();
+        res.send(data);
+    } catch (error) {
+        console.error('Error in proxy:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
